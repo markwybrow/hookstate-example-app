@@ -7,7 +7,8 @@ This repository can be used as a 'starter repo'.
 The source code demonstrates the usage of Hookstate in more realistic, large application than shorter [code samples and demos available online](https://hookstate.netlify.com/).
 We advise you to look through the shorter samples online, if you discovered the Hookstate for the first time, before studying this application.
 
-[See it running online](https://hookstate-example-app.netlify.com/)
+[See this application running online](https://hookstate-example-app.netlify.com/)
+
 ![sample app screenshot](https://user-images.githubusercontent.com/3971413/68582067-b8543a80-04de-11ea-93af-ccc6579f36a9.png)
 
 ## Available Scripts
