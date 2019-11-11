@@ -3,6 +3,7 @@ import { useSettingsState } from './SettingsState';
 
 export function SettingsViewer() {
     const settingsState = useSettingsState();
+
     return <div style={{
         border: 'solid',
         borderWidth: 1,

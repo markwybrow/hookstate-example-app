@@ -3,58 +3,40 @@ import { useTasksState, Task } from './TasksState';
 import { StateLink, useStateLink } from '@hookstate/core';
 import { useSettingsState } from './SettingsState';
 
-function Button(props: {
-    onClick?: () => void,
-    borderColor?: string,
-    text: string,
-    style?: React.CSSProperties
-}) {
-    return <button
-        style={{
-            fontSize: '1em',
-            border: 'solid',
-            borderWidth: 1,
-            borderColor: props.borderColor || 'grey',
-            color: 'white',
-            background: 'none',
-            padding: 10,
-            minWidth: 110,
-            ...props.style
-        }}
-        onClick={() => props.onClick && props.onClick()}
-    >{props.text}</button>
-}
-
 function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
-    // In large scale arrays,
-    // it would be a bit more efficient if settings were passed as a property
-    // from a parent component, because they are the same for all tasks.
-    // We do not care about this little optimization in the sample application.
+    // The next hook is *global state* link of the global state wrapped by an interface. 
+    // In the case of large scale arrays,
+    // it would be more efficient if settings were obtained by the parent
+    // component once and passed here as a property.
+    // We do not care about this optimization in the sample application,
+    // and acccess the settings state in every child
     const settingsState = useSettingsState()
 
-    // The next two hooks show how the global state can be modified
-    // - via a proxy state of a copy data allowing 'Save/Cancel' actions
-    // OR
-    // - directly allowing inline editing
-    // For the direct inline editing, we use *scoped state* link,
-    // if it is enabled in app settings.
-    // See https://github.com/avkonst/hookstate#usestatelink
-    // for more details about scoped state.
-    // Scoped state is optional optimisation,
-    // we could use 'props.task' everywhere instead of taskState:
+    // The next hook is *scoped state* link of a fragment of the global state. 
+    // Scoped state is an optional optimisation,
+    // we could use 'props.task' everywhere instead of taskState.
+    //     See https://github.com/avkonst/hookstate#usestatelink
+    //     for more details about the *scoped state*.
     let taskState = useStateLink(props.task);
     if (!settingsState.isScopedUpdateEnabled) {
-        // For demonstration purposes, we allow to opt out of the scope
-        // state optimisation if it is disabled:
+        // For demonstration purposes, we allow to opt out of
+        // the *scoped state* optimisation, if it is disabled:
+        // (scope state is still created, but not used in this case)
         taskState = props.task;
     }
-    // State link to access and mutate the global state directly:
+    // State link to access and mutate the global state:
     const taskNameGlobal = taskState.nested.name;
-    // State link to access and mutate the COPY of the global state:
-    const taskNameLocal = useStateLink(taskState.nested.name.get().toString());
 
-    const [isEditing, setEditing] = React.useState(false)
+    // The next hook is *local state* link with the initial state equal
+    // to the copy of the state value, which was supplied in properties. 
+    // State link to access and mutate a COPY of the global state:
+    const taskNameLocal = useStateLink(taskState.nested.name.get());
 
+    // The next hook is *local state* link with the initial state
+    // created from a constant
+    const isEditing = useStateLink(false)
+
+    // This is the trick to obtain different color on every run of this function
     var colors = ['#ff0000', '#00ff00', '#0000ff'];
     const color = React.useRef(0)
     color.current += 1
@@ -80,7 +62,7 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
                 flexGrow: 2,
                 display: 'flex',
                 border: 'solid',
-                borderWidth: settingsState.isEditableInline || isEditing ? 1 : 0,
+                borderWidth: settingsState.isEditableInline || isEditing.get() ? 1 : 0,
                 borderColor: 'grey',
             }}
         >
@@ -106,7 +88,7 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
                         padding: 10,
                         textDecoration: taskState.nested.done.get() ? 'line-through' : 'none',
                     }}
-                    readOnly={!(settingsState.isEditableInline || isEditing)}
+                    readOnly={!(settingsState.isEditableInline || isEditing.get())}
                     value={
                         settingsState.isEditableInline
                             ? taskNameGlobal.get()
@@ -122,7 +104,7 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
             </div>
         </div>
         {!settingsState.isEditableInline &&
-            <div>{isEditing
+            <div>{isEditing.get()
                 ? <Button
                     style={{
                         marginLeft: 20
@@ -130,7 +112,7 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
                     borderColor="grey"
                     onClick={() => {
                         taskNameGlobal.set(taskNameLocal.get())
-                        setEditing(false)
+                        isEditing.set(false)
                     }}
                     text="Save"
                 />
@@ -139,18 +121,18 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
                         marginLeft: 20
                     }}
                     borderColor="grey"
-                    onClick={() => setEditing(true)}
+                    onClick={() => isEditing.set(true)}
                     text="Edit"
                 />
             }</div>
         }
-        <div>{isEditing
+        <div>{isEditing.get()
             ? <Button
                 style={{ marginLeft: 15 }}
                 borderColor="red"
                 onClick={() => {
-                    setEditing(false)
-                    taskNameLocal.set(taskNameGlobal.get().toString())
+                    isEditing.set(false)
+                    taskNameLocal.set(taskNameGlobal.get())
                 }}
                 text="Cancel"
             />
@@ -158,7 +140,7 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
                 style={{ marginLeft: 15 }}
                 borderColor="red"
                 onClick={() => {
-                    setEditing(false)
+                    isEditing.set(false)
                     props.onDelete()
                 }}
                 text="Delete"
@@ -171,7 +153,9 @@ export function TasksViewer() {
     const tasksState = useTasksState()
     const isLoading = useStateLink(true)
     
-    // simulate async loading of a state
+    // Emulate asynchronous loading of the initial state data.
+    // The real application would run some fetch request,
+    // to get the initial data from a server.
     React.useEffect(() => {
         const timer = setTimeout(() => {
             tasksState.set([{
@@ -190,8 +174,13 @@ export function TasksViewer() {
             isLoading.set(false)
         }, 3000);
         return () => clearTimeout(timer)
+        // Eslint for React hooks does not know that
+        // state link variable never get's stale
+        // (this is the feature of the Hookstate done on purpose),
+        // and so warns about it. We disable this warning.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, []) // We want to run this effect only once to emulate the initial loading,
+        
     
     if (isLoading.get()) {
         return <div style={{ textAlign: 'center' }}>
@@ -229,4 +218,26 @@ export function TasksViewer() {
         />
     </div>
     </div>
+}
+
+function Button(props: {
+    onClick?: () => void,
+    borderColor?: string,
+    text: string,
+    style?: React.CSSProperties
+}) {
+    return <button
+        style={{
+            fontSize: '1em',
+            border: 'solid',
+            borderWidth: 1,
+            borderColor: props.borderColor || 'grey',
+            color: 'white',
+            background: 'none',
+            padding: 10,
+            minWidth: 110,
+            ...props.style
+        }}
+        onClick={() => props.onClick && props.onClick()}
+    >{props.text}</button>
 }
