@@ -169,6 +169,35 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
 
 export function TasksViewer() {
     const tasksState = useTasksState()
+    const isLoading = useStateLink(true)
+    
+    // simulate async loading of a state
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            tasksState.set([{
+                id: '1',
+                name: 'Discover Hookstate',
+                done: true,
+            }, {
+                id: '2',
+                name: 'Replace Redux by Hookstate',
+                done: false,
+            }, {
+                id: '3',
+                name: 'Enjoy simpler code and faster application',
+                done: false,
+            }])
+            isLoading.set(false)
+        }, 3000);
+        return () => clearTimeout(timer)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+    
+    if (isLoading.get()) {
+        return <div style={{ textAlign: 'center' }}>
+            Loading initial state asynchronously...
+        </div>
+    }
     
     return <div style={{ textAlign: 'left', marginBottom: 50 }}>{
         tasksState.nested.map((task, i) => <TaskEditor

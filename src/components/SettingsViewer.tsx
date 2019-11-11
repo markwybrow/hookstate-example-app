@@ -8,9 +8,10 @@ export function SettingsViewer() {
         borderWidth: 1,
         borderColor: '#09d3ac',
         marginBottom: 30,
-        fontSize: '0.8em'
+        fontSize: '0.8em',
+        display: 'flex'
     }}>
-        <div style={{ flexGrow: 2, display: 'flex', marginTop: 10 }}>
+        <div style={{ flexGrow: 2, display: 'flex' }}>
             <div>
                 <input
                     style={{ transform: 'scale(1.6)', marginLeft: 20 }}
@@ -20,10 +21,10 @@ export function SettingsViewer() {
                 />
             </div>
             <div style={{ paddingLeft: 10, paddingBottom: 10 }}>
-                edit global state directly
+                edit inline
             </div>
         </div>
-        <div style={{ flexGrow: 2, display: 'flex'}}>
+        <div style={{ flexGrow: 2, display: 'flex' }}>
             <div>
                 <input
                     style={{ transform: 'scale(1.6)', marginLeft: 20 }}
@@ -33,7 +34,7 @@ export function SettingsViewer() {
                 />
             </div>
             <div style={{ paddingLeft: 10, paddingBottom: 10}}>
-                use scoped state link
+                use scoped state
             </div>
         </div>
         <div style={{ flexGrow: 2, display: 'flex'}}>
@@ -46,7 +47,7 @@ export function SettingsViewer() {
                 />
             </div>
             <div style={{ paddingLeft: 10, paddingBottom: 10}}>
-                show re-render marker
+                highlight updates
             </div>
         </div>
     </div>
