@@ -3,6 +3,27 @@ import { useTasksState, Task } from './TasksState';
 import { StateLink, useStateLink } from '@hookstate/core';
 import { useSettingsState } from './SettingsState';
 
+function Button(props: {
+    onClick?: () => void,
+    borderColor?: string,
+    text: string,
+    style?: React.CSSProperties
+}) {
+    return <button
+        style={{
+            fontSize: '1em',
+            border: 'solid',
+            borderWidth: 1,
+            borderColor: props.borderColor || 'grey',
+            color: 'white',
+            background: 'none',
+            padding: 10,
+            minWidth: 110,
+            ...props.style
+        }}
+        onClick={() => props.onClick && props.onClick()}
+    >{props.text}</button>
+}
 
 function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
     // In large scale arrays,
@@ -15,16 +36,22 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
     // - via a proxy state of a copy data allowing 'Save/Cancel' actions
     // OR
     // - directly allowing inline editing
-    //      For the direct inline editing, we use *scoped state* link
-    //         (see: https://github.com/avkonst/hookstate#usestatelink)
-    //      to make sure the whole list is not rerendered on every keystroke.
-    //      Scoped state is optional optimisation,
-    //      we could use 'props.task.nested.name' everywhere instead
-    //
+    // For the direct inline editing, we use *scoped state* link,
+    // if it is enabled in app settings.
+    // See https://github.com/avkonst/hookstate#usestatelink
+    // for more details about scoped state.
+    // Scoped state is optional optimisation,
+    // we could use 'props.task' everywhere instead of taskState:
+    let taskState = useStateLink(props.task);
+    if (!settingsState.isScopedUpdate) {
+        // For demonstration purposes, we allow to opt out of the scope
+        // state optimisation if it is disabled:
+        taskState = props.task;
+    }
     // State link to access and mutate the global state directly:
-    const taskNameGlobal = useStateLink(props.task.nested.name);
+    const taskNameGlobal = taskState.nested.name;
     // State link to access and mutate the COPY of the global state:
-    const taskNameLocal = useStateLink(taskNameGlobal.get().toString());
+    const taskNameLocal = useStateLink(taskState.nested.name.get().toString());
 
     const [isEditing, setEditing] = React.useState(false)
     
@@ -45,8 +72,8 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
                         margin: 20
                     }}
                     type="checkbox"
-                    checked={props.task.nested.done.get()}
-                    onChange={() => props.task.nested.done.set(p => !p)}
+                    checked={taskState.nested.done.get()}
+                    onChange={() => taskState.nested.done.set(p => !p)}
                 />
             </div>
             <div style={{ flexGrow: 2 }}>
@@ -58,7 +85,7 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
                         color: 'white',
                         width: '90%',
                         padding: 10,
-                        textDecoration: props.task.nested.done.get() ? 'line-through' : 'none',
+                        textDecoration: taskState.nested.done.get() ? 'line-through' : 'none',
                     }}
                     readOnly={!(settingsState.isEditableInline || isEditing)}
                     value={
@@ -76,47 +103,48 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
             </div>
         </div>
         {!settingsState.isEditableInline &&
-            <div>
-                <button
+            <div>{isEditing
+                ? <Button
                     style={{
-                        fontSize: '1em',
-                        border: 'solid',
-                        borderWidth: 1,
-                        borderColor: 'grey',
-                        color: 'white',
-                        background: 'none',
-                        padding: 10,
-                        marginLeft: 20,
-                        minWidth: 110
+                        marginLeft: 20
                     }}
+                    borderColor="grey"
                     onClick={() => {
-                        if (isEditing) {
-                            taskNameGlobal.set(taskNameLocal.get())
-                        }
-                        setEditing(p => !p)
+                        taskNameGlobal.set(taskNameLocal.get())
+                        setEditing(false)
                     }}
-                >{isEditing ? 'Save' : 'Edit'}</button>
-            </div>
+                    text="Save"
+                />
+                : <Button
+                    style={{
+                        marginLeft: 20
+                    }}
+                    borderColor="grey"
+                    onClick={() => setEditing(true)}
+                    text="Edit"
+                />
+            }</div>
         }
-        <div>
-            <button
-                style={{
-                    fontSize: '1em',
-                    border: 'solid',
-                    borderWidth: 1,
-                    borderColor: 'red',
-                    color: 'white',
-                    background: 'none',
-                    padding: 10,
-                    marginLeft: 20,
-                    minWidth: 110
-                }}
+        <div>{isEditing
+            ? <Button
+                style={{ marginLeft: 15 }}
+                borderColor="red"
                 onClick={() => {
-                    setEditing(p => !p)
-                    isEditing ? taskNameLocal.set(taskNameGlobal.get()) : props.onDelete()
+                    setEditing(false)
+                    taskNameLocal.set(taskNameGlobal.get().toString())
                 }}
-            >{isEditing ? 'Cancel' : 'Delete'}</button>
-        </div>
+                text="Cancel"
+            />
+            : <Button
+                style={{ marginLeft: 15 }}
+                borderColor="red"
+                onClick={() => {
+                    setEditing(false)
+                    props.onDelete()
+                }}
+                text="Delete"
+            />
+        }</div>
     </div>
 }
 
@@ -125,7 +153,7 @@ export function TasksViewer() {
     
     return <div style={{ textAlign: 'left', marginBottom: 50 }}>{
         tasksState.nested.map((task, i) => <TaskEditor
-            key={i.toString() + Math.random()}
+            key={task.value.id}
             task={task}
             onDelete={() => tasksState.set(p => {
                 // alternatively could use Mutate plugin:
@@ -135,26 +163,20 @@ export function TasksViewer() {
             })}
         />)
     }
-        <button
-            style={{
-                fontSize: '1em',
-                marginTop: 20,
-                border: 'solid',
-                borderWidth: 1,
-                borderColor: 'green',
-                color: 'white',
-                background: 'none',
-                padding: 10,                
-            }}
+        <Button
+            style={{ marginTop: 20, minWidth: 300 }}
+            borderColor="lightgreen"
             onClick={() => tasksState.set(p => {
                 // alternatively could use Mutate plugin:
                 // https://hookstate.netlify.com/plugin-mutate
                 p.push({
+                    id: Math.random().toString() + p.length,
                     name: 'Untitled Task #' + (p.length + 1),
                     done: false
                 })
                 return p;
             })}
-        >Add new task</button>
+            text="Add new task"
+        />
     </div>
 }
