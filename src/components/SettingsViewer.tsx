@@ -3,15 +3,21 @@ import { useSettingsState } from './SettingsState';
 
 export function SettingsViewer() {
     const settingsState = useSettingsState();
-    return <>
+    return <div style={{
+        border: 'solid',
+        borderWidth: 1,
+        borderColor: '#09d3ac',
+        marginBottom: 30
+    }}>
+        <div style={{
+            paddingTop: 10,
+            paddingLeft: 20,
+            paddingBottom: 10
+        }}>Settings:</div>
         <div
             style={{
                 flexGrow: 2,
                 display: 'flex',
-                border: 'solid',
-                borderWidth: 1,
-                borderColor: '#09d3ac',
-                marginBottom: 10,
             }}
         >
             <div>
@@ -24,7 +30,6 @@ export function SettingsViewer() {
             </div>
             <div
                 style={{
-                    paddingTop: 5,
                     paddingLeft: 10,
                     paddingBottom: 10
                 }}
@@ -35,24 +40,19 @@ export function SettingsViewer() {
         <div
             style={{
                 flexGrow: 2,
-                display: 'flex',
-                border: 'solid',
-                borderWidth: 1,
-                borderColor: '#09d3ac',
-                marginBottom: 30,
+                display: 'flex'
             }}
         >
             <div>
                 <input
                     style={{ transform: 'scale(2)', margin: 20 }}
                     type="checkbox"
-                    checked={settingsState.isScopedUpdate}
+                    checked={settingsState.isScopedUpdateEnabled}
                     onChange={() => settingsState.toogleScopedUpdate()}
                 />
             </div>
             <div
                 style={{
-                    paddingTop: 5,
                     paddingLeft: 10,
                     paddingBottom: 10
                 }}
@@ -60,5 +60,28 @@ export function SettingsViewer() {
                 enable scoped state link
             </div>
         </div>
-    </>
+        <div
+            style={{
+                flexGrow: 2,
+                display: 'flex'
+            }}
+        >
+            <div>
+                <input
+                    style={{ transform: 'scale(2)', margin: 20 }}
+                    type="checkbox"
+                    checked={settingsState.isHighlightUpdateEnabled}
+                    onChange={() => settingsState.toogleHighlightUpdate()}
+                />
+            </div>
+            <div
+                style={{
+                    paddingLeft: 10,
+                    paddingBottom: 10
+                }}
+            >
+                enable highlight update marker
+            </div>
+        </div>
+    </div>
 }

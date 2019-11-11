@@ -1,6 +1,10 @@
 import { createStateLink, useStateLink } from '@hookstate/core';
 
-const state = createStateLink({ isEditableInline: false, isScopedUpdate: true })
+const state = createStateLink({
+    isEditableInline: true,
+    isScopedUpdateEnabled: true,
+    isHighlightUpdatesEnabled: true
+})
 
 export function useSettingsState() {
     return useStateLink(state, s => ({
@@ -10,11 +14,17 @@ export function useSettingsState() {
         toogleEditableInline() {
             s.nested.isEditableInline.set(p => !p)
         },
-        get isScopedUpdate() {
-            return s.nested.isScopedUpdate.get()
+        get isScopedUpdateEnabled() {
+            return s.nested.isScopedUpdateEnabled.get()
         },
         toogleScopedUpdate() {
-            s.nested.isScopedUpdate.set(p => !p)
+            s.nested.isScopedUpdateEnabled.set(p => !p)
+        },
+        get isHighlightUpdateEnabled() {
+            return s.nested.isHighlightUpdatesEnabled.get()
+        },
+        toogleHighlightUpdate() {
+            s.nested.isHighlightUpdatesEnabled.set(p => !p)
         }
     }))
 }

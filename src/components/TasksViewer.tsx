@@ -43,7 +43,7 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
     // Scoped state is optional optimisation,
     // we could use 'props.task' everywhere instead of taskState:
     let taskState = useStateLink(props.task);
-    if (!settingsState.isScopedUpdate) {
+    if (!settingsState.isScopedUpdateEnabled) {
         // For demonstration purposes, we allow to opt out of the scope
         // state optimisation if it is disabled:
         taskState = props.task;
@@ -54,8 +54,27 @@ function TaskEditor(props: { task: StateLink<Task>, onDelete: () => void }) {
     const taskNameLocal = useStateLink(taskState.nested.name.get().toString());
 
     const [isEditing, setEditing] = React.useState(false)
+
+    var colors = ['#ff0000', '#00ff00', '#0000ff'];
+    const color = React.useRef(0)
+    color.current += 1
+    var nextColor = colors[color.current % colors.length];
     
-    return <div style={{ display: 'flex', marginBottom: 10 }}>
+    return <div
+        style={{
+            display: 'flex',
+            marginBottom: 10,
+        }}
+    >
+        {settingsState.isHighlightUpdateEnabled &&
+            <div
+                style={{
+                    width: 10,
+                    marginRight: 15,
+                    backgroundColor: nextColor
+                }}
+            />
+        }
         <div
             style={{
                 flexGrow: 2,
