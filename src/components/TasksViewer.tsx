@@ -182,6 +182,7 @@ export function TasksViewer() {
             })}
         />)
     }
+    <div style={{ textAlign: 'right' }} >
         <Button
             style={{ marginTop: 20, minWidth: 300 }}
             borderColor="lightgreen"
@@ -197,5 +198,6 @@ export function TasksViewer() {
             })}
             text="Add new task"
         />
+    </div>
     </div>
 }
