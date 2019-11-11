@@ -25,6 +25,14 @@ const App: React.FC = () => {
             >
               Hookstate
             </a> is simple to learn, but very powerfull and incredibly fast state management for React that is based on hooks.
+            <br/><span style={{ fontSize: '0.7em' }}>
+              This is a sample application with <a
+                style={{ color: '#09d3ac' }}
+                href="https://github.com/avkonst/hookstate-example-app"
+                target="_blank"
+                rel="noopener noreferrer"
+              >source code</a> available on Github. 
+            </span>
           </div>
           <SettingsViewer />
           <TasksTotal />
